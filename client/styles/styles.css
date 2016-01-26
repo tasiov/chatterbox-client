@@ -92,3 +92,9 @@ form input[type=text] {
 }
 
 
+#chats {
+    height: 300px;
+    width: 280px;
+    border: solid grey 1px;
+    overflow: scroll;
+}
