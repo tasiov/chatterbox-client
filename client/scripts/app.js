@@ -8,6 +8,8 @@ $(window).on('load', function(){
 
     roomsObj: {},
 
+    friends: [],
+
     // global container for current room variable
     currentRoom: undefined,
 
@@ -28,19 +30,17 @@ $(window).on('load', function(){
       });
     
       $('.text').on('focusout', function(){
-        self.clearKeyBinding;
+        self.clearKeyBinding();
       });
 
       $('.roomSelect').on('change', function() {
 
         // set selected option to global value
         self.currentRoom = event.target.value;
-        console.log(self.currentRoom)
+        console.log(self.currentRoom);
 
         self.fetch();
-
       });
-
     },
 
     setKeyBinding: function() {
@@ -49,7 +49,7 @@ $(window).on('load', function(){
         if (event.keyCode === 13) {
           
           self.handleSubmit();
-        };
+        }
       });
     },
 
@@ -75,9 +75,8 @@ $(window).on('load', function(){
         url: this.server,
         data: 'order=-createdAt',
         success: function(data){
-          // 
           var results = data.results;
-
+          console.log(data);
           for(var i = 0; i < results.length; i++) {
             var result = results[i];
             var text = this._escapeString(result.text);
@@ -98,6 +97,7 @@ $(window).on('load', function(){
           }
         this._clearRoomList();
         this._renderRoomList();
+        app.init();
         }.bind(this)
       });
 
@@ -108,12 +108,10 @@ $(window).on('load', function(){
     },
 
     _renderRoomList: function() {
-      console.log(this.roomsObj)
+      console.log(this.roomsObj);
       // fill room selection with rooms
       var $roomSelect = $('.roomSelect');
       _.each(this.roomsObj, function(val, key) {
-      // $('.roomSelect').
-        console.log('item', val, key);
 
         var option = "<option value=" + key + ">" + key + "</option>";
         $roomSelect.append(option);
@@ -129,12 +127,20 @@ $(window).on('load', function(){
     addMessage: function(message) {
       if (message.roomname === this.currentRoom) {
         var userName = '<span class="username">' + message.username + '</span>';
+        if (this.friends.includes(message.username)) {
+          console.log(this.friends);
+          userName = '<strong>' + userName + '</strong>';
+        }
         var div = "<div class=" + message.roomname + ">" + userName + ': ' + message.text + "</div>";
         $('#chats').append(div);
       } else if (this.currentRoom === undefined) {
-         var userName = '<span class="username">' + message.username + '</span>';
-         var div = "<div class=" + message.roomname + ">" + userName + ': ' + message.text + "</div>";
-         $('#chats').append(div);   
+        var userName = '<span class="username">' + message.username + '</span>';
+        if (this.friends.includes(message.username)) {
+          console.log(this.friends);
+          var userName = '<strong>' + userName + '</strong>';
+        }
+        var div = "<div class=" + message.roomname + ">" + userName + ': ' + message.text + "</div>";
+        $('#chats').append(div);   
       }
     },
 
@@ -148,7 +154,8 @@ $(window).on('load', function(){
     },
 
     addFriend: function(username) {
-      
+      this.friends.push(username);      
+      this.fetch();
     },
 
     handleSubmit: function() {
