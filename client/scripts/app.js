@@ -2,9 +2,14 @@ $(window).on('load', function(){
 
    var app = {
 
-    user: window.location.search.slice(10),
+    user: 'anonymous',
     
     server: 'https://api.parse.com/1/classes/chatterbox',
+
+    roomsObj: {},
+
+    // global container for current room variable
+    currentRoom: undefined,
 
     init: function() {
       var self = this;
@@ -25,6 +30,17 @@ $(window).on('load', function(){
       $('.text').on('focusout', function(){
         self.clearKeyBinding;
       });
+
+      $('.roomSelect').on('change', function() {
+
+        // set selected option to global value
+        self.currentRoom = event.target.value;
+        console.log(self.currentRoom)
+
+        self.fetch();
+
+      });
+
     },
 
     setKeyBinding: function() {
@@ -66,24 +82,60 @@ $(window).on('load', function(){
             var result = results[i];
             var text = this._escapeString(result.text);
             var username = this._escapeString(result.username);
-            // 
+            
+            // saves room names to global object variable.
+            var roomName = this._escapeString( result.roomname );
+            // names are saved as keys. number is not important.
+            this.roomsObj[roomName] = 0;
+            // console.log(this.roomsObj)
             var resultObj = {
               text: text,
-              username: username
+              username: username,
+              roomname: roomName
             };
             
             this.addMessage(resultObj);
           }
+        this._clearRoomList();
+        this._renderRoomList();
         }.bind(this)
       });
+
+    },
+
+    _clearRoomList: function() {
+      $('.roomSelect').children().remove();
+    },
+
+    _renderRoomList: function() {
+      console.log(this.roomsObj)
+      // fill room selection with rooms
+      var $roomSelect = $('.roomSelect');
+      _.each(this.roomsObj, function(val, key) {
+      // $('.roomSelect').
+        console.log('item', val, key);
+
+        var option = "<option value=" + key + ">" + key + "</option>";
+        $roomSelect.append(option);
+      });
+      var option = "<option value='new'>New room...</option>";
+      $roomSelect.prepend(option);
+      if (this.currentRoom !== undefined) {
+        // set select menu to this room even after chat reset
+        $('.roomSelect').val(this.currentRoom);
+      }
     },
 
     addMessage: function(message) {
-      var userName = '<span class="username">' + message.username + '</span>';
-      var div = "<div>" + userName + ': ' + message.text + "</div>";
-
-      // 
-      $('#chats').append(div);
+      if (message.roomname === this.currentRoom) {
+        var userName = '<span class="username">' + message.username + '</span>';
+        var div = "<div class=" + message.roomname + ">" + userName + ': ' + message.text + "</div>";
+        $('#chats').append(div);
+      } else if (this.currentRoom === undefined) {
+         var userName = '<span class="username">' + message.username + '</span>';
+         var div = "<div class=" + message.roomname + ">" + userName + ': ' + message.text + "</div>";
+         $('#chats').append(div);   
+      }
     },
 
     clearMessages: function() {
@@ -103,18 +155,28 @@ $(window).on('load', function(){
       // grab data from text box
       var $text = $('.text').val();
       
+      // reset userID to entered name
+      this.user = $('.userID').val();
+     
       // clear text box
       $('.text').val('');
+
       // use this.send to upload message to server
+
+      // console.log('send fires: ', this.user, $text )
       this.send({
         username: this.user,
         text: $text,
-        room: ""
+        roomname: ""
       });
     },
 
     _escapeString: function(str) {
-      return str === undefined ? "" : str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); 
+      if (str === undefined || str === null) {
+        return '';
+      } else {
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); 
+      }
     }
   };
 
