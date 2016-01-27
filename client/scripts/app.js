@@ -60,7 +60,7 @@ $(window).on('load', function(){
     },
 
     scrollAnimate: function() {
-      // $('#chats').animate( { scrollTop: $('#chats')[0].scrollHeight }, 1000);
+          $('#chats').animate( { scrollTop: $('#chats')[0].scrollHeight }, 1000);
     },
 
     setKeyBinding: function() {
@@ -78,12 +78,15 @@ $(window).on('load', function(){
     },
 
     send: function(message) {
-      
+      var self = this;
       $.ajax({
         type: "POST",
         url: this.server,
         data: JSON.stringify(message),
-        dataType: 'json'
+        dataType: 'json',
+        success: function() {
+          self.fetch();
+        }
       });
     },
 
@@ -183,7 +186,7 @@ $(window).on('load', function(){
     },
 
     clearMessages: function() {
-      $('#chats').children().remove();
+      $('#chats').children().html();
     },
 
     addRoom: function(roomName) {
